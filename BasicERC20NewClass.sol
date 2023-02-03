@@ -104,37 +104,35 @@ function _selfDestruct(address payable _receiverAddress) public onlyOwner {
 
 
 //Task - 2  : Increase the total supply
-function mint(uint amount) public onlyOwner returns(bool){
-    require(amount > 0 , "Amount must be a positive value");
-    totalSupply_ = SafeMath.add(totalSupply_,amount);
-    balances[msg.sender] = SafeMath.add(balances[msg.sender] , amount);
-    return true;
+  function increaseSupply (uint increasedAmount) public onlyOwner returns(bool){
+    balances[ownerCon] = balances[ownerCon].add(increasedAmount);
+    totalSupply_ = totalSupply_.add(increasedAmount);
+    emit Transfer(address(0), ownerCon, increasedAmount);
 }
 
-
 //Task - 3  : Burn some coins
-function burn(uint amount) public onlyOwner returns(bool){
-    require(amount > 0 , "Amount must be a positive value");
-    require(balances[msg.sender] >= amount , "Burn amount exceeds sender's balance");  
-    totalSupply_ = SafeMath.sub(totalSupply_,amount);
-    balances[msg.sender] = SafeMath.sub(balances[msg.sender] , amount);
-    return true;
+ function decreaseSupply (uint burnAmount) public onlyOwner returns(bool){
+    balances[ownerCon] = balances[ownerCon].sub(burnAmount);
+    totalSupply_ = totalSupply_.sub(burnAmount);
+     emit Transfer(ownerCon,address(0), burnAmount);
 }
 
 //Task - 4  : Transfer only to whitelisted addresses
-mapping(address => bool) whitelistedAddresses;
+mapping(address => bool) allwhitelistedAddresses;
 
 //Function to whitelist the address.
-function addWhiteListedAddress(address addressToBeWhitelisted) public onlyOwner  {
-        require(whitelistedAddresses[addressToBeWhitelisted]==false , "Address already WhiteListed.");
-        whitelistedAddresses[addressToBeWhitelisted] = true;
+modifier isAddressWhitelisted(address _address) {
+    require(allwhitelistedAddresses[_address], "This Address is Not Whitelisted");
+    _;
+    }
+
+    function addaddress(address _addressToWhitelist) public onlyOwner {
+         allwhitelistedAddresses[_addressToWhitelist] = true;
     }
 
 //Function to transer the token only to whitelisted addesses.
-function transfer(address receiver, uint numTokens) public returns (bool) {
-        require(numTokens <= balances[msg.sender],"You Don't Have Sufficient Balance");
-        require(whitelistedAddresses[receiver], "This address is not whitelisted");
-    
+function transfer(address receiver, uint numTokens) public isAddressWhitelisted(msg.sender) returns (bool) {
+        require(numTokens <= balances[msg.sender], "Not Sufficient Balance");
         balances[msg.sender] = balances[msg.sender].sub(numTokens);
         balances[receiver] = balances[receiver].add(numTokens);
         emit Transfer(msg.sender, receiver, numTokens); // logging these values using events
